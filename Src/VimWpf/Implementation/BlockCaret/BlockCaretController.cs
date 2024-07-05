@@ -123,15 +123,13 @@ namespace Vim.UI.Wpf.Implementation.BlockCaret
                     kind = CaretDisplay.Invisible;
                     break;
                 case ModeKind.Insert:
-                    kind =_vimBuffer.Vim.VimHost.UseDefaultCaret
-                        ? CaretDisplay.NormalCaret
-                        : CaretDisplay.Select;
+                    kind = CaretDisplay.Block;
                     break;
                 case ModeKind.ExternalEdit:
-                    kind = CaretDisplay.NormalCaret;
+                    kind = CaretDisplay.Block;
                     break;
                 case ModeKind.Disabled:
-                    kind = CaretDisplay.NormalCaret;
+                    kind = CaretDisplay.Block;
                     break;
                 case ModeKind.Replace:
                     kind = CaretDisplay.QuarterBlock;

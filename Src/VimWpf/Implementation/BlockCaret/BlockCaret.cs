@@ -218,11 +218,13 @@ namespace Vim.UI.Wpf.Implementation.BlockCaret
         }
 
         /// <summary>
-        /// Get the number of milliseconds for the caret blink time.  Null is returned if the 
+        /// Get the number of milliseconds for the caret blink time.  Null is returned if the
         /// caret should not blink
         /// </summary>
         private static int? GetCaretBlinkTime()
         {
+            return null;
+
             var blinkTime = NativeMethods.GetCaretBlinkTime();
 
             // The API returns INFINITE if the caret simply should not blink.  Additionally it returns
@@ -244,18 +246,18 @@ namespace Vim.UI.Wpf.Implementation.BlockCaret
 
         /// <summary>
         /// This helper is used to work around a reported, but unreproducable, bug. The constructor
-        /// of DispatcherTimer is throwing an exception claiming a millisecond time greater 
+        /// of DispatcherTimer is throwing an exception claiming a millisecond time greater
         /// than int.MaxValue is being passed to the constructor.
-        /// 
+        ///
         /// This is clearly not possible given the input is an int value.  However after multiple user
         /// reports it's clear the exception is getting triggered.
         ///
         /// The only semi-plausible idea I can come up with is a floating point conversion issue.  Given
-        /// that the input to Timespan is int and the compared value is double it's possible that a 
-        /// conversion / rounding issue is causing int.MaxValue to become int.MaxValue + 1.  
+        /// that the input to Timespan is int and the compared value is double it's possible that a
+        /// conversion / rounding issue is causing int.MaxValue to become int.MaxValue + 1.
         ///
         /// Either way though need to guard against this case to unblock users.
-        /// 
+        ///
         /// https://github.com/VsVim/VsVim/issues/631
         /// https://github.com/VsVim/VsVim/issues/1860
         /// </summary>
@@ -379,7 +381,7 @@ namespace Vim.UI.Wpf.Implementation.BlockCaret
                     ? PrimaryCaretFormatDefinition.Name
                     : SecondaryCaretFormatDefinition.Name);
         }
-        
+
         /// <summary>
         /// Attempt to copy the real caret color
         /// </summary>
@@ -666,11 +668,11 @@ namespace Vim.UI.Wpf.Implementation.BlockCaret
 
         /// <summary>
         /// This determines if the image which is used to represent the caret is stale and needs
-        /// to be recreated.  
+        /// to be recreated.
         /// </summary>
         private bool IsAdornmentStale(VirtualSnapshotPoint caretPoint, CaretData caretData, int numberOfCarets)
         {
-            // Size is represented in floating point so strict equality comparison will almost 
+            // Size is represented in floating point so strict equality comparison will almost
             // always return false.  Use a simple epsilon to test the difference
 
             if (caretData.Color != TryCalculateCaretColor(caretData.CaretIndex, numberOfCarets)
@@ -701,7 +703,7 @@ namespace Vim.UI.Wpf.Implementation.BlockCaret
 
         private void EnsureCaretDisplayed()
         {
-            // For normal caret we just use the standard caret.  Make sure the adornment is removed and 
+            // For normal caret we just use the standard caret.  Make sure the adornment is removed and
             // let the normal caret win
             if (CaretDisplay == CaretDisplay.NormalCaret)
             {
