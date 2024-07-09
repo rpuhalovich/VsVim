@@ -1,5 +1,5 @@
 param (
-  # Actions 
+  # Actions
   [switch]$build = $false,
   [switch]$test = $false,
   [switch]$testExtra = $false,
@@ -16,14 +16,14 @@ param (
 Set-StrictMode -version 2.0
 $ErrorActionPreference="Stop"
 
-[string]$rootDir = Split-Path -parent $MyInvocation.MyCommand.Definition 
+[string]$rootDir = Split-Path -parent $MyInvocation.MyCommand.Definition
 [string]$rootDir = Resolve-Path (Join-Path $rootDir "..")
 [string]$binariesDir = Join-Path $rootDir "Binaries"
 [string]$configDir = Join-Path $binariesDir $config
 [string]$deployDir = Join-Path (Join-Path $binariesDir "Deploy") $config
 [string]$logsDir = Join-Path $binariesDir "Logs"
 [string]$toolsDir = Join-Path $rootDir "Tools"
-[string[]]$vsVersions = @("2019", "2022")
+[string[]]$vsVersions = @("2022")
 
 function Print-Usage() {
   Write-Host "Actions:"
@@ -39,7 +39,7 @@ function Print-Usage() {
   Write-Host "  -config <value>           Build configuration: 'Debug' or 'Release'"
 }
 
-# Toggle between human readable messages and Azure Pipelines messages based on 
+# Toggle between human readable messages and Azure Pipelines messages based on
 # our current environment.
 # https://docs.microsoft.com/en-us/azure/devops/pipelines/scripts/logging-commands?view=azure-devops&tabs=powershell
 function Write-TaskError([string]$message) {
@@ -75,7 +75,7 @@ function Update-VsixVersion() {
   }
 }
 
-# Meant to mimic the OpenVsix Gallery script for uploading the VSIX 
+# Meant to mimic the OpenVsix Gallery script for uploading the VSIX
 function Upload-Vsix() {
   if ($env:GITHUB_RUN_NUMBER -eq $null) {
     throw "This is only meant to run in Azure DevOps"
@@ -132,8 +132,8 @@ function Get-MSBuildPath() {
 }
 
 # Test the contents of the Vsix to make sure it has all of the appropriate
-# files 
-function Test-VsixContents() { 
+# files
+function Test-VsixContents() {
   Write-Host "Verifying the Vsix Contents"
   foreach ($vsVersion in $vsVersions) {
     Write-Host "`tVerifying $vsVersion"
@@ -159,14 +159,14 @@ function Test-VsixContents() {
 
     # Make a folder to hold the foundFiles
     $target = Join-Path ([IO.Path]::GetTempPath()) ([IO.Path]::GetRandomFileName())
-    Create-Directory $target 
+    Create-Directory $target
     $zipUtil = Join-Path $rootDir "Tools\7za920\7za.exe"
     Exec-Command $zipUtil "x -o$target $vsixPath" | Out-Null
 
     $foundFiles = Get-ChildItem $target | %{ $_.Name }
-    if ($foundFiles.Count -ne $expectedFiles.Count) { 
+    if ($foundFiles.Count -ne $expectedFiles.Count) {
       Write-TaskError "Found $($foundFiles.Count) but expected $($expectedFiles.Count)"
-      Write-TaskError "Wrong number of foundFiles in VSIX." 
+      Write-TaskError "Wrong number of foundFiles in VSIX."
       Write-TaskError "Extra foundFiles"
       foreach ($file in $foundFiles) {
         if (-not $expectedFiles.Contains($file)) {
@@ -186,8 +186,8 @@ function Test-VsixContents() {
   }
 
   foreach ($item in $expectedFiles) {
-    # Look for dummy foundFiles that made it into the VSIX instead of the 
-    # actual DLL 
+    # Look for dummy foundFiles that made it into the VSIX instead of the
+    # actual DLL
     $itemPath = Join-Path $target $item
     if ($item.EndsWith("dll") -and ((get-item $itemPath).Length -lt 5kb)) {
       throw "Small file detected $item in the zip file ($target)"
@@ -195,7 +195,7 @@ function Test-VsixContents() {
   }
 }
 
-# Make sure that the version number is the same in all locations.  
+# Make sure that the version number is the same in all locations.
 function Test-Version() {
   Write-Host "Testing Version Numbers"
   $version = $null;
@@ -225,13 +225,13 @@ function Test-Version() {
   foreach ($vsVersion in $vsVersions) {
     $data = [xml](Get-Content "Src\VsVim$($vsVersion)\source.extension.vsixmanifest")
     $manifestVersion = $data.PackageManifest.Metadata.Identity.Version
-    if ($manifestVersion -ne $version) { 
-      throw "The version $version doesn't match up with the manifest version of $manifestVersion" 
+    if ($manifestVersion -ne $version) {
+      throw "The version $version doesn't match up with the manifest version of $manifestVersion"
     }
   }
 }
 
-function Test-UnitTests() { 
+function Test-UnitTests() {
   Write-Host "Running unit tests"
   foreach ($vsVersion in $vsVersions) {
     Write-Host "Running $vsVersion"
@@ -244,7 +244,7 @@ function Test-UnitTests() {
     $xunit = Join-Path (Get-PackagesDir) "xunit.runner.console\2.4.1\tools\net472\xunit.console.x86.exe"
     $anyFailed = $false
 
-    foreach ($filePath in $all) { 
+    foreach ($filePath in $all) {
       $filePath = Join-Path $configDir $filePath
       $fileName = [IO.Path]::GetFileNameWithoutExtension($filePath)
       $logFilePath = Join-Path $resultsDir "$($fileName).xml"
@@ -264,7 +264,7 @@ function Test-UnitTests() {
 }
 
 
-function Build-Solution(){ 
+function Build-Solution(){
   $msbuild = Get-MSBuildPath
   Write-Host "Using MSBuild from $msbuild"
 
@@ -281,12 +281,12 @@ function Build-Solution(){
 
   Write-Host "Cleaning Vsix"
   Create-Directory $deployDir
-  Push-Location $deployDir 
-  try { 
+  Push-Location $deployDir
+  try {
     Remove-Item -re -fo "$deployDir\*"
     foreach ($vsVersion in $vsVersions) {
       Write-Host "`tCleaning $vsVersion"
-      $vsVersionDir = Join-Path $deployDir $vsVersion 
+      $vsVersionDir = Join-Path $deployDir $vsVersion
       Create-Directory $vsVersionDir
       Set-Location $vsVersionDir
       $sourcePath = Join-Path $configDir "VsVim$($vsVersion)\net472\VsVim.vsix"
@@ -294,7 +294,7 @@ function Build-Solution(){
       Copy-Item $sourcePath "VsVim.vsix"
 
       # Due to the way we build the VSIX there are many files included that we don't actually
-      # want to deploy.  Here we will clear out those files and rebuild the VSIX without 
+      # want to deploy.  Here we will clear out those files and rebuild the VSIX without
       # them
       $cleanUtil = Join-Path $configDir "CleanVsix\net472\CleanVsix.exe"
       Exec-Console $cleanUtil (Join-Path $vsVersionDir "VsVim.vsix")

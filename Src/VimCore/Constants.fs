@@ -1,4 +1,4 @@
-﻿#light 
+﻿#light
 
 namespace Vim
 
@@ -41,7 +41,7 @@ module VimConstants =
     let VersionNumber = "2.10.99.99 Debug"
 #else
     [<Literal>]
-    let VersionNumber = "2.10.0.5"
+    let VersionNumber = "9.9.9.9"
 #endif
 
 
